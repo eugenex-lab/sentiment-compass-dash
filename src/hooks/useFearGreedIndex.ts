@@ -45,7 +45,7 @@ export const getClassificationFromValue = (value: number): Classification => {
 };
 
 const fetchFearGreedIndex = async (): Promise<FearGreedDataPoint[]> => {
-  const response = await fetch("https://api.alternative.me/fng/?limit=365");
+  const response = await fetch("https://api.alternative.me/fng/?limit=1825");
   
   if (!response.ok) {
     throw new Error("Failed to fetch Fear & Greed Index data");
@@ -65,9 +65,46 @@ export const useFearGreedIndex = () => {
   return useQuery({
     queryKey: ["fearGreedIndex"],
     queryFn: fetchFearGreedIndex,
-    staleTime: 1000 * 60 * 5, // 5 minutes
-    refetchInterval: 1000 * 60 * 10, // 10 minutes
+    staleTime: 1000 * 60 * 5,
+    refetchInterval: 1000 * 60 * 10,
   });
+};
+
+export const calculateStreak = (data: FearGreedDataPoint[]) => {
+  if (!data || data.length === 0) return { classification: "", days: 0 };
+  
+  const currentClassification = data[0].value_classification;
+  let streakDays = 0;
+  
+  for (const point of data) {
+    if (point.value_classification === currentClassification) {
+      streakDays++;
+    } else {
+      break;
+    }
+  }
+  
+  return { classification: currentClassification, days: streakDays };
+};
+
+export const getTrendDirection = (data: FearGreedDataPoint[]) => {
+  if (!data || data.length < 7) return { direction: "Neutral", change: 0 };
+  
+  const current = data[0].value;
+  const weekAgo = data[6].value;
+  const change = current - weekAgo;
+  
+  if (change > 5) return { direction: "Uptrend", change };
+  if (change < -5) return { direction: "Downtrend", change };
+  return { direction: "Sideways", change };
+};
+
+export const getMarketSignal = (value: number): string => {
+  if (value <= 20) return "Strong buying opportunity";
+  if (value <= 35) return "Potential buying opportunity";
+  if (value <= 55) return "Market is balanced";
+  if (value <= 75) return "Exercise caution";
+  return "Consider taking profits";
 };
 
 export const calculateStats = (data: FearGreedDataPoint[]) => {
@@ -80,10 +117,15 @@ export const calculateStats = (data: FearGreedDataPoint[]) => {
       highest: 0,
       lowest: 100,
       classificationCounts: {} as Record<string, number>,
+      streak: { classification: "", days: 0 },
+      trend: { direction: "Neutral", change: 0 },
+      signal: "",
+      yesterdayChange: 0,
     };
   }
 
   const current = data[0];
+  const yesterday = data[1];
   const last7Days = data.slice(0, 7);
   const last30Days = data.slice(0, 30);
 
@@ -99,6 +141,7 @@ export const calculateStats = (data: FearGreedDataPoint[]) => {
 
   const highest = Math.max(...data.map((d) => d.value));
   const lowest = Math.min(...data.map((d) => d.value));
+  const yesterdayChange = yesterday ? current.value - yesterday.value : 0;
 
   const classificationCounts: Record<string, number> = {};
   data.forEach((d) => {
@@ -114,5 +157,9 @@ export const calculateStats = (data: FearGreedDataPoint[]) => {
     highest,
     lowest,
     classificationCounts,
+    streak: calculateStreak(data),
+    trend: getTrendDirection(data),
+    signal: getMarketSignal(current.value),
+    yesterdayChange,
   };
 };

@@ -1,4 +1,3 @@
-import { PieChart, Pie, Cell, ResponsiveContainer, Legend, Tooltip } from "recharts";
 import { getClassificationColor } from "@/hooks/useFearGreedIndex";
 
 interface DistributionChartProps {
@@ -14,59 +13,36 @@ const CLASSIFICATIONS = [
 ];
 
 export const DistributionChart = ({ classificationCounts }: DistributionChartProps) => {
+  const total = Object.values(classificationCounts).reduce((sum, v) => sum + v, 0);
+
   const data = CLASSIFICATIONS.map((name) => ({
     name,
     value: classificationCounts[name] || 0,
+    percentage: total > 0 ? ((classificationCounts[name] || 0) / total * 100).toFixed(1) : "0",
     color: getClassificationColor(name),
-  })).filter((d) => d.value > 0);
-
-  const total = data.reduce((sum, d) => sum + d.value, 0);
-
-  const CustomTooltip = ({ active, payload }: any) => {
-    if (active && payload && payload.length) {
-      const item = payload[0].payload;
-      const percentage = ((item.value / total) * 100).toFixed(1);
-      return (
-        <div className="glass-card rounded-lg p-3 shadow-xl border border-border/50">
-          <p className="font-medium" style={{ color: item.color }}>
-            {item.name}
-          </p>
-          <p className="text-sm text-muted-foreground">
-            {item.value} days ({percentage}%)
-          </p>
-        </div>
-      );
-    }
-    return null;
-  };
+  }));
 
   return (
-    <div className="glass-card rounded-2xl p-6 animate-fade-in" style={{ animationDelay: "300ms" }}>
-      <h3 className="text-lg font-semibold mb-4">Sentiment Distribution</h3>
-      <div className="h-[280px]">
-        <ResponsiveContainer width="100%" height="100%">
-          <PieChart>
-            <Pie
-              data={data}
-              cx="50%"
-              cy="50%"
-              innerRadius={60}
-              outerRadius={90}
-              paddingAngle={2}
-              dataKey="value"
-            >
-              {data.map((entry, index) => (
-                <Cell key={`cell-${index}`} fill={entry.color} />
-              ))}
-            </Pie>
-            <Tooltip content={<CustomTooltip />} />
-            <Legend
-              formatter={(value: string) => (
-                <span className="text-sm text-foreground">{value}</span>
-              )}
-            />
-          </PieChart>
-        </ResponsiveContainer>
+    <div className="bg-card border border-border rounded-2xl p-5">
+      <h3 className="text-sm font-semibold mb-4 text-foreground">Sentiment Distribution</h3>
+      <div className="space-y-3">
+        {data.map((item) => (
+          <div key={item.name} className="space-y-1.5">
+            <div className="flex items-center justify-between text-xs">
+              <span className="text-muted-foreground">{item.name}</span>
+              <span className="font-mono font-medium text-foreground">{item.percentage}%</span>
+            </div>
+            <div className="h-2 bg-secondary rounded-full overflow-hidden">
+              <div
+                className="h-full rounded-full transition-all duration-500"
+                style={{
+                  width: `${item.percentage}%`,
+                  backgroundColor: item.color,
+                }}
+              />
+            </div>
+          </div>
+        ))}
       </div>
     </div>
   );

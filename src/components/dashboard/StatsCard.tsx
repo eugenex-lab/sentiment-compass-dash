@@ -5,32 +5,21 @@ interface StatsCardProps {
   value: string | number;
   subtitle?: string;
   icon: LucideIcon;
-  trend?: "up" | "down" | "neutral";
-  delay?: number;
 }
 
-export const StatsCard = ({
-  title,
-  value,
-  subtitle,
-  icon: Icon,
-  delay = 0,
-}: StatsCardProps) => {
+export const StatsCard = ({ title, value, subtitle, icon: Icon }: StatsCardProps) => {
   return (
-    <div
-      className="glass-card rounded-xl p-5 animate-fade-in"
-      style={{ animationDelay: `${delay}ms` }}
-    >
+    <div className="bg-card border border-border rounded-xl p-4">
       <div className="flex items-start justify-between">
         <div className="space-y-1">
-          <p className="text-sm font-medium text-muted-foreground">{title}</p>
-          <p className="text-2xl sm:text-3xl font-bold font-mono">{value}</p>
+          <p className="text-xs text-muted-foreground">{title}</p>
+          <p className="text-2xl font-bold font-mono text-foreground">{value}</p>
           {subtitle && (
             <p className="text-xs text-muted-foreground">{subtitle}</p>
           )}
         </div>
-        <div className="p-2.5 rounded-lg bg-primary/10">
-          <Icon className="h-5 w-5 text-primary" />
+        <div className="p-2 rounded-lg bg-primary/10">
+          <Icon className="h-4 w-4 text-primary" />
         </div>
       </div>
     </div>

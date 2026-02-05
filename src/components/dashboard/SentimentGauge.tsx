@@ -1,24 +1,25 @@
 import { getClassificationColor } from "@/hooks/useFearGreedIndex";
+import { ArrowUp, ArrowDown, Minus } from "lucide-react";
 
 interface SentimentGaugeProps {
   value: number;
   classification: string;
+  signal: string;
+  yesterdayChange: number;
 }
 
-export const SentimentGauge = ({ value, classification }: SentimentGaugeProps) => {
+export const SentimentGauge = ({ value, classification, signal, yesterdayChange }: SentimentGaugeProps) => {
   const color = getClassificationColor(classification);
   const rotation = (value / 100) * 180 - 90;
 
-  return (
-    <div className="glass-card rounded-2xl p-6 sm:p-8 animate-fade-in glow-primary">
-      <div className="text-center">
-        <p className="text-sm font-medium text-muted-foreground mb-4">
-          Current Sentiment
-        </p>
+  const ChangeIcon = yesterdayChange > 0 ? ArrowUp : yesterdayChange < 0 ? ArrowDown : Minus;
+  const changeColor = yesterdayChange > 0 ? "text-green-500" : yesterdayChange < 0 ? "text-red-500" : "text-muted-foreground";
 
+  return (
+    <div className="bg-card border border-border rounded-2xl p-6 sm:p-8">
+      <div className="text-center">
         {/* Gauge Container */}
-        <div className="relative w-64 h-32 mx-auto mb-6">
-          {/* Background Arc */}
+        <div className="relative w-56 h-28 mx-auto mb-4">
           <svg
             viewBox="0 0 200 100"
             className="w-full h-full overflow-visible"
@@ -33,59 +34,50 @@ export const SentimentGauge = ({ value, classification }: SentimentGaugeProps) =
               </linearGradient>
             </defs>
             
-            {/* Background arc */}
             <path
               d="M 20 100 A 80 80 0 0 1 180 100"
               fill="none"
-              stroke="hsl(var(--muted))"
-              strokeWidth="12"
+              stroke="currentColor"
+              strokeOpacity={0.1}
+              strokeWidth="10"
               strokeLinecap="round"
             />
             
-            {/* Colored arc */}
             <path
               d="M 20 100 A 80 80 0 0 1 180 100"
               fill="none"
               stroke="url(#gaugeGradient)"
-              strokeWidth="12"
+              strokeWidth="10"
               strokeLinecap="round"
-              strokeDasharray="251.2"
-              strokeDashoffset={251.2 - (value / 100) * 251.2}
-              className="transition-all duration-1000 ease-out"
             />
           </svg>
 
           {/* Needle */}
           <div
             className="absolute bottom-0 left-1/2 origin-bottom transition-transform duration-1000 ease-out"
-            style={{
-              transform: `translateX(-50%) rotate(${rotation}deg)`,
-            }}
+            style={{ transform: `translateX(-50%) rotate(${rotation}deg)` }}
           >
-            <div
-              className="w-1 h-20 rounded-full"
-              style={{ backgroundColor: color }}
-            />
-            <div
-              className="w-4 h-4 rounded-full -mt-1 -ml-1.5"
-              style={{ backgroundColor: color }}
-            />
+            <div className="w-0.5 h-16 bg-foreground rounded-full" />
+            <div className="w-3 h-3 rounded-full bg-foreground -mt-1 -ml-[5px]" />
           </div>
         </div>
 
         {/* Value Display */}
-        <div className="space-y-2">
-          <p
-            className="text-6xl sm:text-7xl font-bold font-mono tracking-tight"
-            style={{ color }}
-          >
-            {value}
-          </p>
-          <p
-            className="text-xl sm:text-2xl font-semibold"
-            style={{ color }}
-          >
+        <div className="space-y-1">
+          <div className="flex items-center justify-center gap-2">
+            <p className="text-5xl font-bold font-mono" style={{ color }}>
+              {value}
+            </p>
+            <div className={`flex items-center gap-0.5 ${changeColor}`}>
+              <ChangeIcon className="w-4 h-4" />
+              <span className="text-sm font-medium">{Math.abs(yesterdayChange)}</span>
+            </div>
+          </div>
+          <p className="text-lg font-semibold" style={{ color }}>
             {classification}
+          </p>
+          <p className="text-xs text-muted-foreground mt-2 px-4">
+            {signal}
           </p>
         </div>
       </div>
