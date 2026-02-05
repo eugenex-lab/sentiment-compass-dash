@@ -6,39 +6,48 @@ interface RecentReadingsProps {
 }
 
 export const RecentReadings = ({ data }: RecentReadingsProps) => {
-  const recentData = data.slice(0, 10);
+  const recentData = data.slice(0, 7);
 
   return (
-    <div className="glass-card rounded-2xl p-6 animate-fade-in" style={{ animationDelay: "400ms" }}>
-      <h3 className="text-lg font-semibold mb-4">Recent Readings</h3>
-      <div className="space-y-3">
-        {recentData.map((item, index) => (
-          <div
-            key={item.timestamp}
-            className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
-          >
-            <div className="flex items-center gap-3">
-              <span className="text-sm text-muted-foreground w-20">
-                {format(item.date, "MMM d")}
-              </span>
-              <span
-                className="text-sm font-medium px-2 py-0.5 rounded-full"
-                style={{
-                  backgroundColor: `${getClassificationColor(item.value_classification)}20`,
-                  color: getClassificationColor(item.value_classification),
-                }}
-              >
-                {item.value_classification}
-              </span>
-            </div>
-            <span
-              className="text-lg font-bold font-mono"
-              style={{ color: getClassificationColor(item.value_classification) }}
+    <div className="bg-card border border-border rounded-2xl p-5">
+      <h3 className="text-sm font-semibold mb-4 text-foreground">Recent Activity</h3>
+      <div className="space-y-2">
+        {recentData.map((item, index) => {
+          const prevValue = recentData[index + 1]?.value;
+          const change = prevValue ? item.value - prevValue : 0;
+          
+          return (
+            <div
+              key={item.timestamp}
+              className="flex items-center justify-between py-2 border-b border-border/50 last:border-0"
             >
-              {item.value}
-            </span>
-          </div>
-        ))}
+              <div className="flex items-center gap-3">
+                <span className="text-xs text-muted-foreground w-16">
+                  {format(item.date, "MMM d")}
+                </span>
+                <div
+                  className="w-2 h-2 rounded-full"
+                  style={{ backgroundColor: getClassificationColor(item.value_classification) }}
+                />
+              </div>
+              <div className="flex items-center gap-3">
+                <span
+                  className="text-lg font-bold font-mono"
+                  style={{ color: getClassificationColor(item.value_classification) }}
+                >
+                  {item.value}
+                </span>
+                {index < recentData.length - 1 && (
+                  <span className={`text-xs font-mono w-8 text-right ${
+                    change > 0 ? "text-green-500" : change < 0 ? "text-red-500" : "text-muted-foreground"
+                  }`}>
+                    {change > 0 ? "+" : ""}{change}
+                  </span>
+                )}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
