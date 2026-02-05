@@ -202,36 +202,6 @@ const Index = () => {
               />
             </div>
           </div>
-
-          {/* Market Intelligence Row (Now part of the same grid flow) */}
-          {stats.current.price && (
-            <>
-              <div className="lg:col-span-4">
-                <StatsCard
-                  title="ASSET PRICE (BTC/USD)"
-                  value={formatCurrency(stats.current.price)}
-                  subtitle={`${stats.current.priceChange24h! > 0 ? "+" : ""}${stats.current.priceChange24h?.toFixed(2)}% (24h)`}
-                  icon={Bitcoin}
-                />
-              </div>
-              <div className="lg:col-span-4">
-                <StatsCard
-                  title="24H TRADING VOLUME"
-                  value={`$${formatCompactNumber(stats.current.volume24h!)}`}
-                  subtitle="Verified Exchange Aggregate"
-                  icon={Activity}
-                />
-              </div>
-              <div className="lg:col-span-4">
-                <StatsCard
-                  title="MARKET CAPITALIZATION"
-                  value={`$${formatCompactNumber(stats.current.marketCap!)}`}
-                  subtitle="Total Circulating Supply"
-                  icon={Coins}
-                />
-              </div>
-            </>
-          )}
         </div>
 
         {/* Chart Section */}
