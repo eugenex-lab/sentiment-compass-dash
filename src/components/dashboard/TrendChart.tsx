@@ -1,16 +1,22 @@
+import { useMemo } from "react";
 import {
   AreaChart,
   Area,
+  Line,
+  Bar,
   XAxis,
   YAxis,
   CartesianGrid,
   Tooltip,
   ResponsiveContainer,
   ReferenceLine,
+  Cell,
 } from "recharts";
 import {
   FearGreedDataPoint,
   getClassificationColor,
+  formatCurrency,
+  formatCompactNumber,
 } from "@/hooks/useFearGreedIndex";
 import { format } from "date-fns";
 
@@ -25,16 +31,53 @@ const CustomTooltip = ({ active, payload }: any) => {
     const color = getClassificationColor(data.value_classification);
 
     return (
-      <div className="bg-card border border-border rounded-lg p-3 shadow-xl">
-        <p className="text-xs text-muted-foreground mb-1">
-          {format(new Date(data.date), "MMM d, yyyy")}
-        </p>
-        <p className="text-2xl font-bold font-mono" style={{ color }}>
-          {data.value}
-        </p>
-        <p className="text-xs font-medium" style={{ color }}>
-          {data.value_classification}
-        </p>
+      <div className="bg-card/95 backdrop-blur-md border border-primary/20 rounded-xl p-4 shadow-2xl ring-1 ring-white/5 space-y-3 min-w-[180px]">
+        <div className="border-b border-white/10 pb-2">
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-muted-foreground">
+            {format(new Date(data.date), "MMMM dd, yyyy")}
+          </p>
+        </div>
+
+        <div className="space-y-2">
+          <div className="flex items-center justify-between gap-4">
+            <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+              Sentiment
+            </span>
+            <div className="flex items-center gap-2">
+              <span className="text-xl font-black font-mono" style={{ color }}>
+                {data.value}
+              </span>
+              <span
+                className="text-[8px] font-black uppercase px-1.5 py-0.5 rounded border border-current bg-current/5"
+                style={{ color }}
+              >
+                {data.value_classification}
+              </span>
+            </div>
+          </div>
+
+          {data.price && (
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                BTC Price
+              </span>
+              <span className="text-sm font-bold font-mono text-foreground">
+                {formatCurrency(data.price)}
+              </span>
+            </div>
+          )}
+
+          {data.volume24h && (
+            <div className="flex items-center justify-between gap-4">
+              <span className="text-[10px] font-bold text-muted-foreground uppercase tracking-widest">
+                Volume
+              </span>
+              <span className="text-sm font-bold font-mono text-foreground/80">
+                ${formatCompactNumber(data.volume24h)}
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     );
   }
@@ -42,28 +85,7 @@ const CustomTooltip = ({ active, payload }: any) => {
 };
 
 export const TrendChart = ({ data, timeRange }: TrendChartProps) => {
-  const getRangeData = () => {
-    if (!timeRange) return [...data].reverse();
-
-    switch (timeRange) {
-      case "7d":
-        return data.slice(0, 7).reverse();
-      case "30d":
-        return data.slice(0, 30).reverse();
-      case "90d":
-        return data.slice(0, 90).reverse();
-      case "1y":
-        return data.slice(0, 365).reverse();
-      case "2y":
-        return data.slice(0, 730).reverse();
-      case "5y":
-        return data.slice(0, 1825).reverse();
-      default:
-        return data.slice(0, 30).reverse();
-    }
-  };
-
-  const chartData = getRangeData();
+  const chartData = useMemo(() => [...data].reverse(), [data]);
 
   const getTickInterval = () => {
     if (!timeRange) {
@@ -121,18 +143,21 @@ export const TrendChart = ({ data, timeRange }: TrendChartProps) => {
               vertical={false}
             />
             <ReferenceLine
+              yAxisId="sentiment"
               y={25}
               stroke="hsl(var(--extreme-fear))"
               strokeDasharray="4 4"
               strokeOpacity={0.4}
             />
             <ReferenceLine
+              yAxisId="sentiment"
               y={50}
               stroke="hsl(var(--neutral))"
               strokeDasharray="4 4"
               strokeOpacity={0.4}
             />
             <ReferenceLine
+              yAxisId="sentiment"
               y={75}
               stroke="hsl(var(--greed))"
               strokeDasharray="4 4"
@@ -157,6 +182,7 @@ export const TrendChart = ({ data, timeRange }: TrendChartProps) => {
               className="text-muted-foreground"
             />
             <YAxis
+              yAxisId="sentiment"
               domain={[0, 100]}
               stroke="currentColor"
               strokeOpacity={0.5}
@@ -166,8 +192,50 @@ export const TrendChart = ({ data, timeRange }: TrendChartProps) => {
               ticks={[0, 25, 50, 75, 100]}
               className="text-muted-foreground"
             />
+            <YAxis
+              yAxisId="price"
+              orientation="right"
+              domain={["auto", "auto"]}
+              stroke="currentColor"
+              strokeOpacity={0.3}
+              fontSize={10}
+              tickLine={false}
+              axisLine={false}
+              tickFormatter={(val) => `$${formatCompactNumber(val)}`}
+              className="text-muted-foreground font-medium"
+            />
             <Tooltip content={<CustomTooltip />} />
+
+            {/* Volume Bars (Background) */}
+            <Bar
+              yAxisId="sentiment"
+              dataKey="volume24h"
+              fill="hsl(var(--primary))"
+              fillOpacity={0.05}
+              animationDuration={1000}
+            />
+
+            {/* Price Line */}
+            <Line
+              yAxisId="price"
+              type="monotone"
+              dataKey="price"
+              stroke="hsl(var(--accent))"
+              strokeWidth={2}
+              strokeDasharray="5 5"
+              dot={false}
+              activeDot={{
+                r: 4,
+                fill: "hsl(var(--accent))",
+                stroke: "hsl(var(--background))",
+                strokeWidth: 2,
+              }}
+              animationDuration={2000}
+            />
+
+            {/* Sentiment Area */}
             <Area
+              yAxisId="sentiment"
               type="monotone"
               dataKey="value"
               stroke="hsl(var(--primary))"
@@ -191,24 +259,25 @@ export const TrendChart = ({ data, timeRange }: TrendChartProps) => {
           </AreaChart>
         </ResponsiveContainer>
       </div>
-      <div className="flex justify-center gap-8 mt-6 text-[10px] uppercase tracking-widest font-semibold opacity-70">
+      <div className="flex flex-wrap justify-center gap-x-8 gap-y-4 mt-6 text-[10px] uppercase tracking-widest font-bold opacity-70">
         <div className="flex items-center gap-2">
-          <div className="w-2.5 h-2.5 bg-red-500/80 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.4)]"></div>
-          <span>Fear</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <div
-            className="w-2.5 h-2.5 bg-neutral rounded-full shadow-[0_0_8px_hsl(var(--neutral)/0.4)]"
-            style={{ backgroundColor: "hsl(var(--neutral))" }}
-          ></div>
-          <span>Neutral</span>
+          <div className="w-2.5 h-2.5 bg-red-500 rounded-full shadow-[0_0_8px_rgba(239,68,68,0.4)]"></div>
+          <span>Fear Ranges</span>
         </div>
         <div className="flex items-center gap-2">
           <div
             className="w-2.5 h-2.5 bg-primary rounded-full shadow-[0_0_8px_hsl(var(--primary)/0.4)]"
             style={{ backgroundColor: "hsl(var(--primary))" }}
           ></div>
-          <span>Greed</span>
+          <span>Sentiment Index</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-4 h-0.5 bg-accent border-b-2 border-dashed border-accent"></div>
+          <span className="text-accent">BTC Price (USD)</span>
+        </div>
+        <div className="flex items-center gap-2">
+          <div className="w-3 h-3 bg-primary/10 rounded-sm"></div>
+          <span>Trade Volume</span>
         </div>
       </div>
     </div>

@@ -1,4 +1,7 @@
-import { getClassificationColor } from "@/hooks/useFearGreedIndex";
+import {
+  getClassificationColor,
+  formatCurrency,
+} from "@/hooks/useFearGreedIndex";
 import { ArrowUp, ArrowDown, Minus } from "lucide-react";
 
 interface SentimentGaugeProps {
@@ -6,6 +9,7 @@ interface SentimentGaugeProps {
   classification: string;
   signal: string;
   yesterdayChange: number;
+  price?: number;
 }
 
 export const SentimentGauge = ({
@@ -13,6 +17,7 @@ export const SentimentGauge = ({
   classification,
   signal,
   yesterdayChange,
+  price,
 }: SentimentGaugeProps) => {
   const color = getClassificationColor(classification);
   const rotation = (value / 100) * 180 - 90;
@@ -101,10 +106,17 @@ export const SentimentGauge = ({
               </span>
             </div>
           </div>
-          <p className="text-lg font-semibold" style={{ color }}>
+          <p className="text-lg font-bold" style={{ color }}>
             {classification}
           </p>
-          <p className="text-xs text-muted-foreground mt-2 px-4">{signal}</p>
+          {price && (
+            <p className="text-sm font-black font-mono tracking-tighter text-foreground/70 mt-1">
+              {formatCurrency(price)}
+            </p>
+          )}
+          <p className="text-[10px] font-medium leading-relaxed uppercase tracking-widest text-muted-foreground mt-4 px-6">
+            {signal}
+          </p>
         </div>
       </div>
     </div>

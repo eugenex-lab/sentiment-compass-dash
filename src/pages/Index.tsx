@@ -1,7 +1,19 @@
 import { useState, useMemo } from "react";
-import { TrendingDown, TrendingUp, BarChart3 } from "lucide-react";
+import {
+  TrendingDown,
+  TrendingUp,
+  BarChart3,
+  Bitcoin,
+  Activity,
+  Coins,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { useFearGreedIndex, calculateStats } from "@/hooks/useFearGreedIndex";
+import {
+  useFearGreedIndex,
+  calculateStats,
+  formatCurrency,
+  formatCompactNumber,
+} from "@/hooks/useFearGreedIndex";
 import { useTheme } from "@/hooks/useTheme";
 import { Header } from "@/components/dashboard/Header";
 import { SentimentGauge } from "@/components/dashboard/SentimentGauge";
@@ -23,21 +35,35 @@ const Index = () => {
     useFearGreedIndex();
   const [timeRange, setTimeRange] = useState<
     "7d" | "30d" | "90d" | "1y" | "2y" | "5y"
-  >("1y");
+  >("30d");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
   const filteredData = useMemo(() => {
     if (!data) return null;
-    if (!dateRange || !dateRange.from || !dateRange.to) return data;
 
-    return data.filter((point) => {
-      const date = new Date(point.date);
-      return isWithinInterval(date, {
-        start: startOfDay(dateRange.from!),
-        end: endOfDay(dateRange.to!),
+    // Highest priority: Custom Date Range
+    if (dateRange && dateRange.from && dateRange.to) {
+      return data.filter((point) => {
+        const date = new Date(point.date);
+        return isWithinInterval(date, {
+          start: startOfDay(dateRange.from!),
+          end: endOfDay(dateRange.to!),
+        });
       });
-    });
-  }, [data, dateRange]);
+    }
+
+    // Default: Filter by quick time range
+    const limits: Record<string, number> = {
+      "7d": 7,
+      "30d": 30,
+      "90d": 90,
+      "1y": 365,
+      "2y": 730,
+      "5y": 1825,
+    };
+    const limit = limits[timeRange] || 30;
+    return data.slice(0, limit);
+  }, [data, dateRange, timeRange]);
 
   const stats = filteredData ? calculateStats(filteredData) : null;
 
@@ -141,6 +167,7 @@ const Index = () => {
               classification={stats.current.value_classification}
               signal={stats.signal}
               yesterdayChange={stats.yesterdayChange}
+              price={stats.current.price}
             />
           </div>
 
@@ -181,6 +208,20 @@ const Index = () => {
               subtitle="Period low"
               icon={TrendingDown}
             />
+            <div className="col-span-2 grid grid-cols-2 gap-4">
+              <StatsCard
+                title="7-Day Volatility"
+                value={`${stats.volatility.toFixed(2)}%`}
+                subtitle="Price standard deviation"
+                icon={Activity}
+              />
+              <StatsCard
+                title="Market Signal"
+                value={stats.current.value > 50 ? "BULLISH" : "BEARISH"}
+                subtitle="Aggregated Context"
+                icon={TrendingUp}
+              />
+            </div>
             <div className="col-span-2 h-full">
               <DistributionChart
                 classificationCounts={stats.classificationCounts}
@@ -189,13 +230,37 @@ const Index = () => {
           </div>
         </div>
 
+        {/* Market Intelligence Row */}
+        {stats.current.price && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in [animation-delay:300ms]">
+            <StatsCard
+              title="ASSET PRICE (BTC/USD)"
+              value={formatCurrency(stats.current.price)}
+              subtitle={`${stats.current.priceChange24h! > 0 ? "+" : ""}${stats.current.priceChange24h?.toFixed(2)}% (24h)`}
+              icon={Bitcoin}
+            />
+            <StatsCard
+              title="24H TRADING VOLUME"
+              value={`$${formatCompactNumber(stats.current.volume24h!)}`}
+              subtitle="Verified Exchange Aggregate"
+              icon={Activity}
+            />
+            <StatsCard
+              title="MARKET CAPITALIZATION"
+              value={`$${formatCompactNumber(stats.current.marketCap!)}`}
+              subtitle="Total Circulating Supply"
+              icon={Coins}
+            />
+          </div>
+        )}
+
         {/* Chart Section */}
         <div className="animate-fade-in [animation-delay:400ms] space-y-4">
           <div className="flex items-center justify-between px-1">
             <div className="flex items-center gap-3">
               <div className="w-1.5 h-6 bg-primary rounded-full shadow-[0_0_12px_hsl(var(--primary)/0.5)]" />
               <h2 className="text-xl font-bold text-foreground tracking-tight">
-                Market Sentiment Trend
+                Asset Sentiment Dynamics
               </h2>
             </div>
             {!dateRange?.from && (
@@ -215,26 +280,27 @@ const Index = () => {
 
         {/* Footer */}
         <footer className="mt-20 pb-12 border-t border-border/40 pt-10 flex flex-col items-center gap-6 text-center">
-          <div className="group transition-all duration-500 flex items-center gap-4">
+          <div className="group transition-all duration-500">
             <img
-              src="https://storage.googleapis.com/context-bucket/6763567/8381861788710317540_0.png"
+              src="https://res.cloudinary.com/dan4b75j7/image/upload/v1744208879/wealthblack/SkT3_azgue5.png"
               alt="Sankore Icon"
-              className="h-8 w-8 object-contain opacity-40 group-hover:opacity-100 transition-opacity"
+              className="h-10 w-10 sm:hidden object-contain opacity-80 group-hover:opacity-100 transition-opacity"
             />
             <img
-              src="https://sankore.com/images/SankoreWhiteLogo2023.png"
+              src="https://res.cloudinary.com/dan4b75j7/image/upload/v1744200906/wealthblack/Welcome-Sankore_fy7xvu.png"
               alt="Sankore Logo"
-              className="h-9 w-auto opacity-30 grayscale group-hover:grayscale-0 group-hover:opacity-100 transition-all duration-700 brightness-0 dark:brightness-100 invert dark:invert-0"
+              className="hidden sm:block h-12 w-auto object-contain opacity-80 group-hover:opacity-100 transition-opacity duration-700"
             />
           </div>
           <div className="space-y-2">
             <p className="max-w-xl text-[10px] sm:text-xs text-muted-foreground/50 leading-relaxed font-medium uppercase tracking-widest">
               &copy; {new Date().getFullYear()} Sankore Funds Management.
-              Professional Financial Advisory & Investment Services.
+              Bitcoin Digital Asset Sentiment Index | Institutional
+              Intelligence.
             </p>
             <p className="text-[9px] text-muted-foreground/40 font-mono">
-              Market data sourced via Alternative.me f&g API. For internal use
-              by Sankore investment teams.
+              Market data sourced via Alternative.me and CoinCap. For internal
+              use by Sankore investment teams.
             </p>
           </div>
         </footer>

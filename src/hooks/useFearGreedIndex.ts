@@ -5,6 +5,10 @@ export interface FearGreedDataPoint {
   value_classification: string;
   timestamp: number;
   date: Date;
+  price?: number;
+  volume24h?: number;
+  marketCap?: number;
+  priceChange24h?: number;
 }
 
 export interface FearGreedResponse {
@@ -17,12 +21,35 @@ export interface FearGreedResponse {
   }>;
 }
 
+export interface BitcoinStats {
+  priceUsd: string;
+  volumeUsd24Hr: string;
+  marketCapUsd: string;
+  changePercent24Hr: string;
+}
+
 export type Classification =
   | "Extreme Fear"
   | "Fear"
   | "Neutral"
   | "Greed"
   | "Extreme Greed";
+
+export const formatCurrency = (value: number) => {
+  return new Intl.NumberFormat("en-US", {
+    style: "currency",
+    currency: "USD",
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 0,
+  }).format(value);
+};
+
+export const formatCompactNumber = (number: number) => {
+  return Intl.NumberFormat("en-US", {
+    notation: "compact",
+    maximumFractionDigits: 1,
+  }).format(number);
+};
 
 export const getClassificationColor = (classification: string): string => {
   switch (classification) {
@@ -49,21 +76,85 @@ export const getClassificationFromValue = (value: number): Classification => {
   return "Extreme Greed";
 };
 
-const fetchFearGreedIndex = async (): Promise<FearGreedDataPoint[]> => {
-  const response = await fetch("https://api.alternative.me/fng/?limit=1825");
+const fetchBitcoinStats = async (): Promise<BitcoinStats | null> => {
+  try {
+    const response = await fetch("https://api.coincap.io/v2/assets/bitcoin");
+    const json = await response.json();
+    return json.data;
+  } catch (error) {
+    console.error("Failed to fetch BTC stats", error);
+    return null;
+  }
+};
 
-  if (!response.ok) {
-    throw new Error("Failed to fetch Fear & Greed Index data");
+const fetchBitcoinHistory = async (): Promise<
+  Array<{ priceUsd: string; time: number }>
+> => {
+  try {
+    const response = await fetch(
+      "https://api.coincap.io/v2/assets/bitcoin/history?interval=d1",
+    );
+    if (!response.ok) return [];
+    const json = await response.json();
+    return json.data || [];
+  } catch (error) {
+    console.error("Failed to fetch BTC history:", error);
+    return [];
+  }
+};
+
+const fetchFearGreedIndex = async (): Promise<FearGreedDataPoint[]> => {
+  // Parallel fetch but handle failures individually to allow degradation
+  const [fngResponse, btcStats, btcHistory] = await Promise.allSettled([
+    fetch("https://api.alternative.me/fng/?limit=1825"),
+    fetchBitcoinStats(),
+    fetchBitcoinHistory(),
+  ]);
+
+  const fngOk = fngResponse.status === "fulfilled" && fngResponse.value.ok;
+  if (!fngOk) {
+    throw new Error(
+      "Critical Failure: Unable to fetch Fear & Greed Sentiment data.",
+    );
   }
 
-  const json: FearGreedResponse = await response.json();
+  const fngJson: FearGreedResponse = await (
+    fngResponse as PromiseFulfilledResult<Response>
+  ).value.json();
 
-  return json.data.map((item) => ({
-    value: parseInt(item.value, 10),
-    value_classification: item.value_classification,
-    timestamp: parseInt(item.timestamp, 10),
-    date: new Date(parseInt(item.timestamp, 10) * 1000),
-  }));
+  const btcStatsValue = btcStats.status === "fulfilled" ? btcStats.value : null;
+  const btcHistoryValue =
+    btcHistory.status === "fulfilled" ? btcHistory.value : [];
+
+  const priceMap = new Map(
+    btcHistoryValue.map((h) => [
+      new Date(h.time).toDateString(),
+      parseFloat(h.priceUsd),
+    ]),
+  );
+
+  return fngJson.data.map((item, index) => {
+    const timestamp = parseInt(item.timestamp, 10);
+    const date = new Date(timestamp * 1000);
+
+    const point: FearGreedDataPoint = {
+      value: parseInt(item.value, 10),
+      value_classification: item.value_classification,
+      timestamp,
+      date,
+      price: priceMap.get(date.toDateString()),
+    };
+
+    // Enrich the latest data point with live market metrics
+    if (index === 0 && btcStatsValue) {
+      point.price = parseFloat(btcStatsValue.priceUsd);
+      point.volume24h = parseFloat(btcStatsValue.volumeUsd24Hr);
+      point.marketCap = parseFloat(btcStatsValue.marketCapUsd);
+      point.priceChange24h = parseFloat(btcStatsValue.changePercent24Hr);
+    }
+
+    return point;
+  });
 };
 
 export const useFearGreedIndex = () => {
@@ -112,6 +203,24 @@ export const getMarketSignal = (value: number): string => {
   return "Consider taking profits";
 };
 
+export const calculatePriceVolatility = (data: FearGreedDataPoint[]) => {
+  const prices = data
+    .slice(0, 7)
+    .map((d) => d.price)
+    .filter(Boolean) as number[];
+  if (prices.length < 2) return 0;
+
+  const returns = [];
+  for (let i = 0; i < prices.length - 1; i++) {
+    returns.push((prices[i] - prices[i + 1]) / prices[i + 1]);
+  }
+
+  const mean = returns.reduce((a, b) => a + b, 0) / returns.length;
+  const variance =
+    returns.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / returns.length;
+  return Math.sqrt(variance) * 100; // Return as percentage
+};
+
 export const calculateStats = (data: FearGreedDataPoint[]) => {
   if (!data || data.length === 0) {
     return {
@@ -126,6 +235,7 @@ export const calculateStats = (data: FearGreedDataPoint[]) => {
       trend: { direction: "Neutral", change: 0 },
       signal: "",
       yesterdayChange: 0,
+      volatility: 0,
     };
   }
 
@@ -166,5 +276,6 @@ export const calculateStats = (data: FearGreedDataPoint[]) => {
     trend: getTrendDirection(data),
     signal: getMarketSignal(current.value),
     yesterdayChange,
+    volatility: calculatePriceVolatility(data),
   };
 };

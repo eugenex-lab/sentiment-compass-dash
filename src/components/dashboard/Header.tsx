@@ -29,22 +29,22 @@ export const Header = ({
       <div className="flex items-center gap-5">
         <div className="bg-primary/10 p-2 sm:p-2.5 rounded-2xl border border-primary/20 backdrop-blur-md shadow-inner transition-transform hover:scale-105 duration-300">
           <img
-            src="https://storage.googleapis.com/context-bucket/6763567/8381861788710317540_0.png"
+            src="https://res.cloudinary.com/dan4b75j7/image/upload/v1744208879/wealthblack/SkT3_azgue5.png"
             alt="Sankore Icon"
             className="h-10 w-10 sm:hidden object-contain"
           />
           <img
-            src="https://sankore.com/images/SankoreWhiteLogo2023.png"
+            src="https://res.cloudinary.com/dan4b75j7/image/upload/v1744200906/wealthblack/Welcome-Sankore_fy7xvu.png"
             alt="Sankore Logo"
-            className="hidden sm:block h-12 w-auto object-contain brightness-0 dark:brightness-100 invert dark:invert-0"
+            className="hidden sm:block h-12 w-auto object-contain"
           />
         </div>
         <div className="space-y-1">
           <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-foreground -leading-tight">
-            Sentiment <span className="text-primary">Compass</span>
+            Bitcoin <span className="text-primary">Fear & Greed</span> Index
           </h1>
           <p className="text-xs sm:text-sm font-semibold text-muted-foreground/80 flex items-center gap-2">
-            Sankore Funds Management
+            Institutional Sentiment Intelligence | Sankore
             {lastUpdated && (
               <>
                 <span className="h-1 w-1 rounded-full bg-primary/30" />
