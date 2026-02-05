@@ -21,6 +21,7 @@ import { StatsCard } from "@/components/dashboard/StatsCard";
 import { TrendChart } from "@/components/dashboard/TrendChart";
 import { DistributionChart } from "@/components/dashboard/DistributionChart";
 import { RecentReadings } from "@/components/dashboard/RecentReadings";
+import { MarketDynamicsChart } from "@/components/dashboard/MarketDynamicsChart";
 import { TimeRangeSelector } from "@/components/dashboard/TimeRangeSelector";
 import { StreakCard } from "@/components/dashboard/StreakCard";
 import { TrendCard } from "@/components/dashboard/TrendCard";
@@ -158,9 +159,9 @@ const Index = () => {
           </div>
         )}
 
-        {/* Top Section */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in [animation-delay:200ms]">
-          {/* Sentiment Gauge */}
+        {/* Premium Intelligence Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 animate-fade-in [animation-delay:200ms]">
+          {/* Main Sentiment Pulse */}
           <div className="lg:col-span-4 h-full">
             <SentimentGauge
               value={stats.current.value}
@@ -171,88 +172,67 @@ const Index = () => {
             />
           </div>
 
-          {/* Quick Stats */}
-          <div className="lg:col-span-4 grid grid-cols-2 gap-4">
-            <StreakCard
-              classification={stats.streak.classification}
-              days={stats.streak.days}
-            />
-            <TrendCard
-              direction={stats.trend.direction}
-              change={stats.trend.change}
-              avg7Day={stats.avg7Day}
-            />
-            <StatsCard
-              title="30-Day Avg"
-              value={stats.avg30Day}
-              icon={BarChart3}
-            />
-            <StatsCard
-              title="All-Time Avg"
-              value={stats.avgAll}
-              icon={BarChart3}
-            />
-          </div>
-
-          {/* Extremes & Distribution */}
-          <div className="lg:col-span-4 grid grid-cols-2 gap-4">
-            <StatsCard
-              title="Highest"
-              value={stats.highest}
-              subtitle="Period high"
-              icon={TrendingUp}
-            />
-            <StatsCard
-              title="Lowest"
-              value={stats.lowest}
-              subtitle="Period low"
-              icon={TrendingDown}
-            />
-            <div className="col-span-2 grid grid-cols-2 gap-4">
-              <StatsCard
-                title="7-Day Volatility"
-                value={`${stats.volatility.toFixed(2)}%`}
-                subtitle="Price standard deviation"
-                icon={Activity}
+          {/* Quick Metrics & Distribution */}
+          <div className="lg:col-span-8 flex flex-col gap-4">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+              <StreakCard
+                classification={stats.streak.classification}
+                days={stats.streak.days}
+              />
+              <TrendCard
+                direction={stats.trend.direction}
+                change={stats.trend.change}
+                avg7Day={stats.avg7Day}
               />
               <StatsCard
-                title="Market Signal"
-                value={stats.current.value > 50 ? "BULLISH" : "BEARISH"}
-                subtitle="Aggregated Context"
-                icon={TrendingUp}
+                title="30-Day Avg"
+                value={stats.avg30Day}
+                icon={BarChart3}
+              />
+              <StatsCard
+                title="All-Time Avg"
+                value={stats.avgAll}
+                icon={BarChart3}
               />
             </div>
-            <div className="col-span-2 h-full">
+
+            <div className="flex-1 min-h-[180px]">
               <DistributionChart
                 classificationCounts={stats.classificationCounts}
               />
             </div>
           </div>
-        </div>
 
-        {/* Market Intelligence Row */}
-        {stats.current.price && (
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 animate-fade-in [animation-delay:300ms]">
-            <StatsCard
-              title="ASSET PRICE (BTC/USD)"
-              value={formatCurrency(stats.current.price)}
-              subtitle={`${stats.current.priceChange24h! > 0 ? "+" : ""}${stats.current.priceChange24h?.toFixed(2)}% (24h)`}
-              icon={Bitcoin}
-            />
-            <StatsCard
-              title="24H TRADING VOLUME"
-              value={`$${formatCompactNumber(stats.current.volume24h!)}`}
-              subtitle="Verified Exchange Aggregate"
-              icon={Activity}
-            />
-            <StatsCard
-              title="MARKET CAPITALIZATION"
-              value={`$${formatCompactNumber(stats.current.marketCap!)}`}
-              subtitle="Total Circulating Supply"
-              icon={Coins}
-            />
-          </div>
-        )}
+          {/* Market Intelligence Row (Now part of the same grid flow) */}
+          {stats.current.price && (
+            <>
+              <div className="lg:col-span-4">
+                <StatsCard
+                  title="ASSET PRICE (BTC/USD)"
+                  value={formatCurrency(stats.current.price)}
+                  subtitle={`${stats.current.priceChange24h! > 0 ? "+" : ""}${stats.current.priceChange24h?.toFixed(2)}% (24h)`}
+                  icon={Bitcoin}
+                />
+              </div>
+              <div className="lg:col-span-4">
+                <StatsCard
+                  title="24H TRADING VOLUME"
+                  value={`$${formatCompactNumber(stats.current.volume24h!)}`}
+                  subtitle="Verified Exchange Aggregate"
+                  icon={Activity}
+                />
+              </div>
+              <div className="lg:col-span-4">
+                <StatsCard
+                  title="MARKET CAPITALIZATION"
+                  value={`$${formatCompactNumber(stats.current.marketCap!)}`}
+                  subtitle="Total Circulating Supply"
+                  icon={Coins}
+                />
+              </div>
+            </>
+          )}
+        </div>
 
         {/* Chart Section */}
         <div className="animate-fade-in [animation-delay:400ms] space-y-4">
@@ -273,9 +253,14 @@ const Index = () => {
           />
         </div>
 
-        {/* Recent Readings */}
-        <div className="animate-fade-in [animation-delay:600ms]">
-          <RecentReadings data={filteredData || []} />
+        {/* Market Insights & Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-8 gap-6 animate-fade-in [animation-delay:600ms]">
+          <div className="lg:col-span-4 h-full">
+            <RecentReadings data={filteredData || []} />
+          </div>
+          <div className="lg:col-span-4 h-full">
+            <MarketDynamicsChart data={filteredData || []} />
+          </div>
         </div>
 
         {/* Footer */}

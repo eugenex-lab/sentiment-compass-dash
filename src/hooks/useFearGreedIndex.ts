@@ -88,15 +88,24 @@ const fetchBitcoinStats = async (): Promise<BitcoinStats | null> => {
 };
 
 const fetchBitcoinHistory = async (): Promise<
-  Array<{ priceUsd: string; time: number }>
+  Array<{ priceUsd: string; volume24h: string; time: number }>
 > => {
   try {
+    // Using CoinGecko for actual Volume + Price history
     const response = await fetch(
-      "https://api.coincap.io/v2/assets/bitcoin/history?interval=d1",
+      "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365&interval=daily",
     );
     if (!response.ok) return [];
     const json = await response.json();
-    return json.data || [];
+
+    // Map CoinGecko arrays [[ts, val], ...] to a more usable format
+    return json.prices.map((p: [number, number], i: number) => ({
+      time: p[0],
+      priceUsd: p[1].toString(),
+      volume24h: json.total_volumes[i]
+        ? json.total_volumes[i][1].toString()
+        : "0",
+    }));
   } catch (error) {
     console.error("Failed to fetch BTC history:", error);
     return [];
@@ -126,10 +135,10 @@ const fetchFearGreedIndex = async (): Promise<FearGreedDataPoint[]> => {
   const btcHistoryValue =
     btcHistory.status === "fulfilled" ? btcHistory.value : [];
 
-  const priceMap = new Map(
+  const historyMap = new Map(
     btcHistoryValue.map((h) => [
       new Date(h.time).toDateString(),
-      parseFloat(h.priceUsd),
+      { price: parseFloat(h.priceUsd), volume: parseFloat(h.volume24h) },
     ]),
   );
 
@@ -137,12 +146,15 @@ const fetchFearGreedIndex = async (): Promise<FearGreedDataPoint[]> => {
     const timestamp = parseInt(item.timestamp, 10);
     const date = new Date(timestamp * 1000);
 
+    const history = historyMap.get(date.toDateString());
+
     const point: FearGreedDataPoint = {
       value: parseInt(item.value, 10),
       value_classification: item.value_classification,
       timestamp,
       date,
-      price: priceMap.get(date.toDateString()),
+      price: history?.price,
+      volume24h: history?.volume,
     };
 
     // Enrich the latest data point with live market metrics
