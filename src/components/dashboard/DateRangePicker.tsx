@@ -35,19 +35,22 @@ export function DateRangePicker({
               !dateRange && "text-muted-foreground",
             )}
           >
-            <CalendarIcon className="mr-2 h-4 w-4" />
-            {dateRange?.from ? (
-              dateRange.to ? (
-                <>
-                  {format(dateRange.from, "LLL dd, y")} -{" "}
-                  {format(dateRange.to, "LLL dd, y")}
-                </>
+            <CalendarIcon className="mr-2 h-4 w-4 text-primary" />
+            <span className="truncate">
+              {dateRange?.from ? (
+                dateRange.to ? (
+                  <>
+                    <span className="font-bold">Filter:</span>{" "}
+                    {format(dateRange.from, "MMM dd")} -{" "}
+                    {format(dateRange.to, "MMM dd, y")}
+                  </>
+                ) : (
+                  format(dateRange.from, "MMM dd, y")
+                )
               ) : (
-                format(dateRange.from, "LLL dd, y")
-              )
-            ) : (
-              <span>Pick a date range</span>
-            )}
+                "Global Date Filter"
+              )}
+            </span>
           </Button>
         </PopoverTrigger>
         <PopoverContent className="w-auto p-0" align="end">

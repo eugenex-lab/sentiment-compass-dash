@@ -27,11 +27,16 @@ export const Header = ({
   return (
     <header className="flex flex-col lg:flex-row lg:items-center justify-between mb-10 gap-6 pt-2">
       <div className="flex items-center gap-5">
-        <div className="bg-primary/10 p-2.5 rounded-2xl border border-primary/20 backdrop-blur-md shadow-inner transition-transform hover:scale-105 duration-300">
+        <div className="bg-primary/10 p-2 sm:p-2.5 rounded-2xl border border-primary/20 backdrop-blur-md shadow-inner transition-transform hover:scale-105 duration-300">
+          <img
+            src="https://storage.googleapis.com/context-bucket/6763567/8381861788710317540_0.png"
+            alt="Sankore Icon"
+            className="h-10 w-10 sm:hidden object-contain"
+          />
           <img
             src="https://sankore.com/images/SankoreWhiteLogo2023.png"
             alt="Sankore Logo"
-            className="h-10 sm:h-12 w-auto object-contain brightness-0 dark:brightness-100 invert dark:invert-0"
+            className="hidden sm:block h-12 w-auto object-contain brightness-0 dark:brightness-100 invert dark:invert-0"
           />
         </div>
         <div className="space-y-1">

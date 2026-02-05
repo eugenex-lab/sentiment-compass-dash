@@ -14,7 +14,7 @@ import { StreakCard } from "@/components/dashboard/StreakCard";
 import { TrendCard } from "@/components/dashboard/TrendCard";
 import { LoadingSkeleton } from "@/components/dashboard/LoadingSkeleton";
 import { DateRange } from "react-day-picker";
-import { isWithinInterval, startOfDay, endOfDay } from "date-fns";
+import { isWithinInterval, startOfDay, endOfDay, format } from "date-fns";
 import { downloadCSV } from "@/lib/csv";
 
 const Index = () => {
@@ -95,6 +95,42 @@ const Index = () => {
           dateRange={dateRange}
           onDateRangeChange={setDateRange}
         />
+
+        {/* Global Filter Indicator */}
+        {dateRange?.from && dateRange?.to && (
+          <div className="animate-in fade-in slide-in-from-top-4 duration-700">
+            <div className="bg-primary/20 border-2 border-primary/40 rounded-2xl p-5 flex flex-col sm:flex-row items-center justify-between gap-4 backdrop-blur-xl shadow-[0_0_25px_rgba(145,196,188,0.15)] ring-1 ring-white/10">
+              <div className="flex items-center gap-5">
+                <div className="h-12 w-12 rounded-xl bg-primary flex items-center justify-center shadow-lg shadow-primary/20 shrink-0">
+                  <BarChart3 className="h-6 w-6 text-background" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-foreground tracking-tight">
+                    Active Portfolio Filter
+                  </h3>
+                  <p className="text-xs text-muted-foreground font-semibold">
+                    Synthesizing sentiment data from{" "}
+                    <span className="text-primary font-bold">
+                      {format(dateRange.from, "MMMM dd, yyyy")}
+                    </span>{" "}
+                    —{" "}
+                    <span className="text-primary font-bold">
+                      {format(dateRange.to, "MMMM dd, yyyy")}
+                    </span>
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="default"
+                size="sm"
+                onClick={() => setDateRange(undefined)}
+                className="rounded-xl px-6 bg-primary hover:bg-primary/80 text-background font-black text-xs uppercase tracking-tighter transition-all shadow-md shadow-primary/10"
+              >
+                Reset Dashboard
+              </Button>
+            </div>
+          </div>
+        )}
 
         {/* Top Section */}
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 animate-fade-in [animation-delay:200ms]">
@@ -179,7 +215,12 @@ const Index = () => {
 
         {/* Footer */}
         <footer className="mt-20 pb-12 border-t border-border/40 pt-10 flex flex-col items-center gap-6 text-center">
-          <div className="group transition-all duration-500">
+          <div className="group transition-all duration-500 flex items-center gap-4">
+            <img
+              src="https://storage.googleapis.com/context-bucket/6763567/8381861788710317540_0.png"
+              alt="Sankore Icon"
+              className="h-8 w-8 object-contain opacity-40 group-hover:opacity-100 transition-opacity"
+            />
             <img
               src="https://sankore.com/images/SankoreWhiteLogo2023.png"
               alt="Sankore Logo"

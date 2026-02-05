@@ -174,6 +174,19 @@ export const TrendChart = ({ data, timeRange }: TrendChartProps) => {
               strokeWidth={3}
               fill="url(#colorValue)"
               animationDuration={1500}
+              dot={{
+                r: 3.5,
+                strokeWidth: 2,
+                fill: "hsl(var(--primary))",
+                stroke: "hsl(var(--background))",
+                fillOpacity: 1,
+              }}
+              activeDot={{
+                r: 6,
+                strokeWidth: 2,
+                stroke: "hsl(var(--background))",
+                fill: "hsl(var(--primary))",
+              }}
             />
           </AreaChart>
         </ResponsiveContainer>
