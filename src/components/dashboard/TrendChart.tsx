@@ -219,7 +219,7 @@ export const TrendChart = ({ data, timeRange }: TrendChartProps) => {
               yAxisId="sentiment"
               dataKey="volume24h"
               fill="hsl(var(--primary))"
-              fillOpacity={0.05}
+              fillOpacity={0.15}
               animationDuration={1000}
             />
 
@@ -284,7 +284,7 @@ export const TrendChart = ({ data, timeRange }: TrendChartProps) => {
           <span className="text-accent">BTC Price (USD)</span>
         </div>
         <div className="flex items-center gap-2">
-          <div className="w-3 h-3 bg-primary/10 rounded-sm"></div>
+          <div className="w-3 h-3 bg-primary/20 rounded-sm"></div>
           <span>Trade Volume</span>
         </div>
       </div>

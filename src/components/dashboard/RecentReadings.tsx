@@ -13,7 +13,7 @@ export const RecentReadings = ({ data }: RecentReadingsProps) => {
   const recentData = data.slice(0, 10);
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-6">
+    <div className="bg-card border border-border rounded-2xl p-6 h-full">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-sm font-bold text-foreground tracking-tight uppercase opacity-70">
           Institutional Activity Log

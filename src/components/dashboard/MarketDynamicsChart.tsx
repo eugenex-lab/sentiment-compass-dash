@@ -34,7 +34,7 @@ export const MarketDynamicsChart = ({ data }: MarketDynamicsChartProps) => {
   }, [data]);
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-6 h-full flex flex-col relative group overflow-hidden">
+    <div className="bg-card border border-border rounded-2xl p-6 h-full h-full flex flex-col relative group overflow-hidden">
       <div className="flex items-center justify-between mb-6">
         <h3 className="text-sm font-bold text-foreground tracking-tight uppercase opacity-70">
           Price & Volume Dynamics
@@ -131,7 +131,7 @@ export const MarketDynamicsChart = ({ data }: MarketDynamicsChartProps) => {
               yAxisId="volume"
               dataKey="volume24h"
               fill="hsl(var(--primary))"
-              opacity={0.15}
+              opacity={0.4}
               radius={[2, 2, 0, 0]}
               barSize={12}
               animationDuration={1500}
@@ -149,7 +149,7 @@ export const MarketDynamicsChart = ({ data }: MarketDynamicsChartProps) => {
             </span>
           </div>
           <div className="flex items-center gap-1.5">
-            <div className="w-2 h-2 rounded-full bg-primary/20" />
+            <div className="w-2 h-2 rounded-full bg-primary/40" />
             <span className="text-[9px] font-black uppercase tracking-widest text-muted-foreground">
               Volume
             </span>
