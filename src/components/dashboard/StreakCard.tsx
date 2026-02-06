@@ -11,7 +11,7 @@ export const StreakCard = ({ classification, days }: StreakCardProps) => {
 
   return (
     <div className="bg-card border border-border rounded-xl p-4 flex h-full items-center">
-      <div className="flex items-center gap-4 w-full">
+      <div className="flex items-center gap-4 w-full flex justify-between">
         <div
           className="p-2.5 rounded-xl shrink-0 border border-white/5 shadow-inner"
           style={{ backgroundColor: `${color}15` }}

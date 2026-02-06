@@ -78,9 +78,32 @@ export const getClassificationFromValue = (value: number): Classification => {
 
 const fetchBitcoinStats = async (): Promise<BitcoinStats | null> => {
   try {
-    const response = await fetch("https://api.coincap.io/v2/assets/bitcoin");
+    // Using CryptoCompare for current stats - no API key required
+    const response = await fetch(
+      "https://min-api.cryptocompare.com/data/pricemultifull?fsyms=BTC&tsyms=USD",
+    );
+
+    if (!response.ok) {
+      console.error(`CryptoCompare stats API returned ${response.status}`);
+      return null;
+    }
+
     const json = await response.json();
-    return json.data;
+
+    if (!json.RAW?.BTC?.USD) {
+      console.error("Unexpected CryptoCompare response format");
+      return null;
+    }
+
+    const btcData = json.RAW.BTC.USD;
+
+    // Map to our BitcoinStats format
+    return {
+      priceUsd: btcData.PRICE.toString(),
+      volumeUsd24Hr: btcData.VOLUME24HOURTO.toString(),
+      marketCapUsd: btcData.MKTCAP.toString(),
+      changePercent24Hr: btcData.CHANGEPCT24HOUR.toString(),
+    };
   } catch (error) {
     console.error("Failed to fetch BTC stats", error);
     return null;
@@ -91,20 +114,32 @@ const fetchBitcoinHistory = async (): Promise<
   Array<{ priceUsd: string; volume24h: string; time: number }>
 > => {
   try {
-    // Using CoinGecko for actual Volume + Price history
+    // Using CryptoCompare API for historical data - no API key required for basic usage
+    // Get daily historical data for the last ~5 years (2000 days)
+    const limit = 2000; // Maximum number of data points
+    const toTs = Math.floor(Date.now() / 1000); // Current timestamp
+
     const response = await fetch(
-      "https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=usd&days=365&interval=daily",
+      `https://min-api.cryptocompare.com/data/v2/histoday?fsym=BTC&tsym=USD&limit=${limit}&toTs=${toTs}`,
     );
-    if (!response.ok) return [];
+
+    if (!response.ok) {
+      console.error(`CryptoCompare API returned ${response.status}`);
+      return [];
+    }
+
     const json = await response.json();
 
-    // Map CoinGecko arrays [[ts, val], ...] to a more usable format
-    return json.prices.map((p: [number, number], i: number) => ({
-      time: p[0],
-      priceUsd: p[1].toString(),
-      volume24h: json.total_volumes[i]
-        ? json.total_volumes[i][1].toString()
-        : "0",
+    if (json.Response === "Error" || !json.Data?.Data) {
+      console.error("CryptoCompare API error:", json.Message);
+      return [];
+    }
+
+    // Map CryptoCompare data to our format
+    return json.Data.Data.map((d: any) => ({
+      time: d.time * 1000, // Convert to milliseconds
+      priceUsd: d.close.toString(), // Use closing price
+      volume24h: ((d.volumefrom + d.volumeto) / 2).toString(), // Average volume
     }));
   } catch (error) {
     console.error("Failed to fetch BTC history:", error);
@@ -115,7 +150,7 @@ const fetchBitcoinHistory = async (): Promise<
 const fetchFearGreedIndex = async (): Promise<FearGreedDataPoint[]> => {
   // Parallel fetch but handle failures individually to allow degradation
   const [fngResponse, btcStats, btcHistory] = await Promise.allSettled([
-    fetch("https://api.alternative.me/fng/?limit=1825"),
+    fetch("https://api.alternative.me/fng/?limit=5000"),
     fetchBitcoinStats(),
     fetchBitcoinHistory(),
   ]);

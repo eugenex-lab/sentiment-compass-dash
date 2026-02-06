@@ -24,19 +24,46 @@ export function DateRangePicker({
   dateRange,
   onDateRangeChange,
 }: DateRangePickerProps) {
+  const [tempRange, setTempRange] = React.useState<DateRange | undefined>(
+    dateRange,
+  );
+  const [isOpen, setIsOpen] = React.useState(false);
+
+  // Sync temp range with dateRange when popover opens
+  React.useEffect(() => {
+    if (isOpen) {
+      setTempRange(dateRange);
+    }
+  }, [isOpen, dateRange]);
+
   const handleFromChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const from = e.target.value ? new Date(e.target.value) : undefined;
-    onDateRangeChange({ from, to: dateRange?.to });
+    setTempRange({ from, to: tempRange?.to });
   };
 
   const handleToChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const to = e.target.value ? new Date(e.target.value) : undefined;
-    onDateRangeChange({ from: dateRange?.from, to });
+    setTempRange({ from: tempRange?.from, to });
   };
+
+  const handleApply = () => {
+    if (tempRange?.from && tempRange?.to) {
+      onDateRangeChange(tempRange);
+      setIsOpen(false);
+    }
+  };
+
+  const handleReset = () => {
+    onDateRangeChange(undefined);
+    setTempRange(undefined);
+    setIsOpen(false);
+  };
+
+  const canApply = tempRange?.from && tempRange?.to;
 
   return (
     <div className={cn("grid gap-2", className)}>
-      <Popover>
+      <Popover open={isOpen} onOpenChange={setIsOpen}>
         <PopoverTrigger asChild>
           <Button
             id="date"
@@ -91,7 +118,7 @@ export function DateRangePicker({
                   type="date"
                   className="h-9 text-xs bg-background/50 border-primary/10 focus-visible:ring-primary font-mono"
                   value={
-                    dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : ""
+                    tempRange?.from ? format(tempRange.from, "yyyy-MM-dd") : ""
                   }
                   onChange={handleFromChange}
                 />
@@ -108,22 +135,33 @@ export function DateRangePicker({
                   type="date"
                   className="h-9 text-xs bg-background/50 border-primary/10 focus-visible:ring-primary font-mono"
                   value={
-                    dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : ""
+                    tempRange?.to ? format(tempRange.to, "yyyy-MM-dd") : ""
                   }
                   onChange={handleToChange}
                 />
               </div>
             </div>
-            {(dateRange?.from || dateRange?.to) && (
+
+            {/* Action Buttons */}
+            <div className="grid grid-cols-2 gap-2 pt-2">
               <Button
                 variant="ghost"
                 size="sm"
-                className="w-full text-[10px] uppercase tracking-tighter h-7 hover:text-red-400 hover:bg-red-500/10 font-bold"
-                onClick={() => onDateRangeChange(undefined)}
+                className="text-[10px] uppercase tracking-tighter h-8 hover:text-red-400 hover:bg-red-500/10 font-bold"
+                onClick={handleReset}
               >
-                Reset to Global View
+                Reset
               </Button>
-            )}
+              <Button
+                variant="default"
+                size="sm"
+                disabled={!canApply}
+                className="text-[10px] uppercase tracking-tighter h-8 bg-primary hover:bg-primary/80 font-bold disabled:opacity-50"
+                onClick={handleApply}
+              >
+                Apply Filter
+              </Button>
+            </div>
           </div>
         </PopoverContent>
       </Popover>

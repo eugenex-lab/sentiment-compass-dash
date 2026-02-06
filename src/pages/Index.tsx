@@ -35,7 +35,7 @@ const Index = () => {
   const { data, isLoading, isRefetching, refetch, dataUpdatedAt } =
     useFearGreedIndex();
   const [timeRange, setTimeRange] = useState<
-    "7d" | "30d" | "90d" | "1y" | "2y" | "5y"
+    "7d" | "30d" | "90d" | "1y" | "2y" | "5y" | "10y" | "max"
   >("30d");
   const [dateRange, setDateRange] = useState<DateRange | undefined>();
 
@@ -61,9 +61,11 @@ const Index = () => {
       "1y": 365,
       "2y": 730,
       "5y": 1825,
+      "10y": 3650,
+      max: Infinity,
     };
     const limit = limits[timeRange] || 30;
-    return data.slice(0, limit);
+    return limit === Infinity ? data : data.slice(0, limit);
   }, [data, dateRange, timeRange]);
 
   const stats = filteredData ? calculateStats(filteredData) : null;
@@ -174,7 +176,7 @@ const Index = () => {
 
           {/* Quick Metrics & Distribution */}
           <div className="lg:col-span-8 flex flex-col gap-4">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="grid grid-cols-2 xl:grid-cols-4 gap-4">
               <StreakCard
                 classification={stats.streak.classification}
                 days={stats.streak.days}

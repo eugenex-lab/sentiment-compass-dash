@@ -22,7 +22,7 @@ import { format } from "date-fns";
 
 interface TrendChartProps {
   data: FearGreedDataPoint[];
-  timeRange?: "7d" | "30d" | "90d" | "1y" | "2y" | "5y";
+  timeRange?: "7d" | "30d" | "90d" | "1y" | "2y" | "5y" | "10y" | "max";
 }
 
 const CustomTooltip = ({ active, payload }: any) => {
@@ -109,6 +109,10 @@ export const TrendChart = ({ data, timeRange }: TrendChartProps) => {
         return 120;
       case "5y":
         return 180;
+      case "10y":
+        return 365;
+      case "max":
+        return Math.ceil(chartData.length / 8);
       default:
         return 7;
     }
@@ -168,7 +172,11 @@ export const TrendChart = ({ data, timeRange }: TrendChartProps) => {
               tickFormatter={(date) =>
                 format(
                   new Date(date),
-                  !timeRange || timeRange === "5y" || timeRange === "2y"
+                  !timeRange ||
+                    timeRange === "5y" ||
+                    timeRange === "2y" ||
+                    timeRange === "10y" ||
+                    timeRange === "max"
                     ? "MMM yy"
                     : "MMM d",
                 )
