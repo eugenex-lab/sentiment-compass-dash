@@ -32,7 +32,7 @@ export const SentimentGauge = ({
         : "text-muted-foreground";
 
   return (
-    <div className="bg-card border border-border rounded-2xl p-6 h-full sm:p-8 h-full flex items-center justify-center">
+    <div className="bg-card border border-border rounded-2xl p-6 sm:p-8 h-full flex items-center justify-center">
       <div className="text-center">
         {/* Gauge Container */}
         <div className="relative w-56 h-28 mx-auto mb-4">
