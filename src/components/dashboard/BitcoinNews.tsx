@@ -32,9 +32,12 @@ export const BitcoinNews = () => {
     refetchInterval: 1000 * 60 * 30,
   });
 
+  const featured = news?.[0];
+  const rest = news?.slice(1);
+
   return (
     <div className="bg-card border border-border rounded-2xl p-5 h-full flex flex-col">
-      <div className="flex items-center gap-3 mb-4">
+      <div className="flex items-center gap-3 mb-5">
         <div className="p-2 rounded-lg bg-primary/10">
           <Newspaper className="h-4 w-4 text-primary" />
         </div>
@@ -46,53 +49,91 @@ export const BitcoinNews = () => {
         </div>
       </div>
 
-      <ScrollArea className="flex-1 -mx-1 px-1" style={{ maxHeight: 420 }}>
-        {isLoading ? (
-          <div className="space-y-3">
-            {Array.from({ length: 5 }).map((_, i) => (
-              <div key={i} className="space-y-2">
-                <Skeleton className="h-4 w-full" />
-                <Skeleton className="h-3 w-2/3" />
-              </div>
+      {isLoading ? (
+        <div className="space-y-4">
+          <Skeleton className="h-48 w-full rounded-xl" />
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <Skeleton key={i} className="h-32 rounded-xl" />
             ))}
           </div>
-        ) : (
-          <div className="space-y-1">
-            {news?.map((item) => (
-              <a
-                key={item.id}
-                href={item.url}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="block p-3 rounded-xl hover:bg-muted/50 transition-colors group"
-              >
-                <div className="flex items-start gap-3">
-                  <div className="flex-1 min-w-0">
-                    <p className="text-xs font-semibold text-foreground leading-snug line-clamp-2 group-hover:text-primary transition-colors">
+        </div>
+      ) : (
+        <div className="space-y-4 flex-1">
+          {/* Featured Article */}
+          {featured && (
+            <a
+              href={featured.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="block group relative overflow-hidden rounded-xl"
+            >
+              <div className="aspect-[21/9] w-full overflow-hidden rounded-xl">
+                <img
+                  src={featured.imageurl}
+                  alt={featured.title}
+                  className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                  loading="lazy"
+                />
+              </div>
+              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/30 to-transparent rounded-xl" />
+              <div className="absolute bottom-0 left-0 right-0 p-4">
+                <p className="text-white text-sm sm:text-base font-bold leading-snug line-clamp-2 drop-shadow-lg">
+                  {featured.title}
+                </p>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-[10px] text-white/70 font-semibold bg-white/10 backdrop-blur-sm px-2 py-0.5 rounded-full">
+                    {featured.source}
+                  </span>
+                  <span className="text-[10px] text-white/50">
+                    {formatDistanceToNow(new Date(featured.published_on * 1000), { addSuffix: true })}
+                  </span>
+                </div>
+              </div>
+            </a>
+          )}
+
+          {/* News Grid */}
+          <ScrollArea style={{ maxHeight: 400 }}>
+            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3">
+              {rest?.map((item) => (
+                <a
+                  key={item.id}
+                  href={item.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="block group relative overflow-hidden rounded-xl bg-muted/30"
+                >
+                  <div className="aspect-[4/3] w-full overflow-hidden">
+                    <img
+                      src={item.imageurl}
+                      alt={item.title}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
+                      loading="lazy"
+                    />
+                  </div>
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/20 to-transparent" />
+                  <div className="absolute bottom-0 left-0 right-0 p-2.5">
+                    <p className="text-white text-[11px] font-semibold leading-tight line-clamp-2 drop-shadow-md">
                       {item.title}
                     </p>
-                    <div className="flex items-center gap-2 mt-1.5">
-                      <span className="text-[10px] text-muted-foreground font-medium">
+                    <div className="flex items-center gap-1.5 mt-1.5">
+                      <span className="text-[9px] text-white/60 font-medium">
                         {item.source}
                       </span>
-                      <span className="text-[10px] text-muted-foreground/50">
-                        ·
+                      <span className="text-[9px] text-white/40">·</span>
+                      <span className="text-[9px] text-white/40">
+                        {formatDistanceToNow(new Date(item.published_on * 1000), { addSuffix: true })}
                       </span>
-                      <span className="text-[10px] text-muted-foreground/70">
-                        {formatDistanceToNow(
-                          new Date(item.published_on * 1000),
-                          { addSuffix: true }
-                        )}
-                      </span>
-                      <ExternalLink className="h-2.5 w-2.5 text-muted-foreground/40 ml-auto shrink-0 opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <ExternalLink className="h-2.5 w-2.5 text-white/30 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </div>
-                </div>
-              </a>
-            ))}
-          </div>
-        )}
-      </ScrollArea>
+                </a>
+              ))}
+            </div>
+          </ScrollArea>
+        </div>
+      )}
     </div>
   );
 };
