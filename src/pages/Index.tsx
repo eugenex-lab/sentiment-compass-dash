@@ -226,19 +226,19 @@ const Index = () => {
           />
         </div>
 
-        {/* Bitcoin News */}
-        <div className="animate-fade-in [animation-delay:600ms]">
-          <BitcoinNews />
-        </div>
-
         {/* Market Insights & Activity */}
-        <div className="grid grid-cols-1 lg:grid-cols-8 gap-6 animate-fade-in [animation-delay:800ms]">
+        <div className="grid grid-cols-1 lg:grid-cols-8 gap-6 animate-fade-in [animation-delay:600ms]">
           <div className="lg:col-span-4 h-full">
             <RecentReadings data={filteredData || []} />
           </div>
           <div className="lg:col-span-4 h-full">
             <MarketDynamicsChart data={filteredData || []} />
           </div>
+        </div>
+
+        {/* Bitcoin News */}
+        <div className="animate-fade-in [animation-delay:800ms]">
+          <BitcoinNews />
         </div>
 
         {/* Footer */}
