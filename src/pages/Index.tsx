@@ -208,10 +208,10 @@ const Index = () => {
 
         {/* Chart Section */}
         <div className="animate-fade-in [animation-delay:400ms] space-y-4">
-          <div className="flex items-center justify-between px-1">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 px-1">
             <div className="flex items-center gap-3">
               <div className="w-1.5 h-6 bg-primary rounded-full shadow-[0_0_12px_hsl(var(--primary)/0.5)]" />
-              <h2 className="text-xl font-bold text-foreground tracking-tight">
+              <h2 className="text-lg sm:text-xl font-bold text-foreground tracking-tight">
                 Asset Sentiment Dynamics
               </h2>
             </div>

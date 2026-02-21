@@ -23,7 +23,7 @@ export const TimeRangeSelector = ({
   onChange,
 }: TimeRangeSelectorProps) => {
   return (
-    <div className="flex gap-1.5 bg-secondary/50 p-1 rounded-lg">
+    <div className="flex flex-wrap gap-1.5 bg-secondary/50 p-1 rounded-lg">
       {ranges.map((range) => (
         <Button
           key={range.value}
