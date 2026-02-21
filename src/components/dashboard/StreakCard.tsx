@@ -10,24 +10,21 @@ export const StreakCard = ({ classification, days }: StreakCardProps) => {
   const color = getClassificationColor(classification);
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 flex h-full items-center">
-      <div className="flex items-center gap-4 w-full flex justify-between">
+    <div className="bg-card border border-border rounded-xl p-4 h-full">
+      <div className="flex flex-col items-center text-center gap-2">
         <div
-          className="p-2.5 rounded-xl shrink-0 border border-white/5 shadow-inner"
+          className="p-2 rounded-lg shrink-0"
           style={{ backgroundColor: `${color}15` }}
         >
-          <Flame className="h-5 w-5" style={{ color }} />
+          <Flame className="h-4 w-4" style={{ color }} />
         </div>
-        <div className="space-y-0.5">
-          <p className="text-xs text-muted-foreground">Current Streak</p>
-          <p className="text-xl font-bold font-mono text-foreground leading-tight">
-            {days} days
+        <div>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">Current Streak</p>
+          <p className="text-2xl font-bold font-mono text-foreground leading-tight">
+            {days}
           </p>
-          <p
-            className="text-[10px] font-bold uppercase tracking-wider opacity-80"
-            style={{ color }}
-          >
-            {classification}
+          <p className="text-[10px] font-semibold" style={{ color }}>
+            days · {classification}
           </p>
         </div>
       </div>

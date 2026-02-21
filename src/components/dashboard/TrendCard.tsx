@@ -8,42 +8,33 @@ interface TrendCardProps {
 
 export const TrendCard = ({ direction, change, avg7Day }: TrendCardProps) => {
   const Icon =
-    direction === "Uptrend"
-      ? TrendingUp
-      : direction === "Downtrend"
-        ? TrendingDown
-        : Minus;
+    direction === "Uptrend" ? TrendingUp : direction === "Downtrend" ? TrendingDown : Minus;
   const iconColor =
     direction === "Uptrend"
       ? "text-green-500"
       : direction === "Downtrend"
         ? "text-red-500"
         : "text-muted-foreground";
+  const bgColor =
+    direction === "Uptrend"
+      ? "bg-green-500/10"
+      : direction === "Downtrend"
+        ? "bg-red-500/10"
+        : "bg-muted/30";
 
   return (
-    <div className="bg-card border border-border rounded-xl p-4 flex h-full items-center">
-      <div className="flex items-center gap-4 w-full flex justify-between">
-        <div
-          className={`p-2.5 rounded-xl shrink-0 border border-white/5 shadow-inner ${
-            direction === "Uptrend"
-              ? "bg-green-500/15"
-              : direction === "Downtrend"
-                ? "bg-red-500/15"
-                : "bg-muted/30"
-          }`}
-        >
-          <Icon className={`h-5 w-5 ${iconColor}`} />
+    <div className="bg-card border border-border rounded-xl p-4 h-full">
+      <div className="flex flex-col items-center text-center gap-2">
+        <div className={`p-2 rounded-lg shrink-0 ${bgColor}`}>
+          <Icon className={`h-4 w-4 ${iconColor}`} />
         </div>
-        <div className="space-y-0.5">
-          <p className="text-xs text-muted-foreground">7-Day Trend</p>
-          <p className="text-xl font-bold font-mono text-foreground leading-tight">
+        <div>
+          <p className="text-[10px] text-muted-foreground uppercase tracking-wide">7-Day Trend</p>
+          <p className="text-2xl font-bold font-mono text-foreground leading-tight">
             {avg7Day}
           </p>
-          <p
-            className={`text-[10px] font-bold uppercase tracking-wider ${iconColor} opacity-80`}
-          >
-            {direction} ({change > 0 ? "+" : ""}
-            {change})
+          <p className={`text-[10px] font-semibold ${iconColor}`}>
+            {direction} ({change > 0 ? "+" : ""}{change})
           </p>
         </div>
       </div>
