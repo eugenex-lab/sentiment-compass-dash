@@ -87,7 +87,7 @@ const FX_COLORS: Record<string, string> = {
 
 const CBN_URL = import.meta.env.DEV
   ? "/cbn-api/GetAllExchangeRates"
-  : "https://corsproxy.io/?url=https%3A%2F%2Fwww.cbn.gov.ng%2Fapi%2FGetAllExchangeRates";
+  : "https://api.allorigins.win/raw?url=" + encodeURIComponent("https://www.cbn.gov.ng/api/GetAllExchangeRates");
 
 // ─── Fetchers ─────────────────────────────────────────────────────────────────
 
