@@ -9,74 +9,87 @@ interface NewsItem {
   title: string;
   url: string;
   source: string;
-  body: string;
   published_on: number;
   imageurl: string;
-  categories: string;
 }
 
-const fetchNairaNews = async (): Promise<NewsItem[]> => {
-  const res = await fetch(
-    "https://min-api.cryptocompare.com/data/v2/news/?lang=EN&categories=NGN,forex,CBN,Naira,Nigeria,Economy&excludeCategories=Sponsored",
-  );
-  if (!res.ok) throw new Error("Failed to fetch news");
-  const json = await res.json();
-  const items: NewsItem[] = json.Data || [];
-  // Filter to currency/forex/Nigeria-related but EXCLUDE crypto-centric headlines
-  const keywords = [
-    "naira",
-    "ngn",
-    "cbn",
-    "nigeria",
-    "forex",
-    "fx",
-    "currency",
-    "exchange rate",
-    "inflation",
-    "economy",
-    "monetary",
-  ];
-  const negativeKeywords = [
-    "bitcoin",
-    "btc",
-    "crypto",
-    "ethereum",
-    "eth",
-    "altcoin",
-    "binance",
-    "blockchain",
-    "mining",
-    "wallet",
-  ];
+// Google News RSS → parsed via allorigins proxy
+const GOOGLE_NEWS_QUERIES = [
+  "Naira exchange rate",
+  "Nigeria forex CBN",
+  "Nigerian economy currency",
+];
 
-  const filtered = items.filter((item) => {
-    const text = (
-      item.title +
-      " " +
-      item.body +
-      " " +
-      item.categories
-    ).toLowerCase();
+const parseRSSItems = (xml: string): NewsItem[] => {
+  const parser = new DOMParser();
+  const doc = parser.parseFromString(xml, "text/xml");
+  const items = doc.querySelectorAll("item");
+  const results: NewsItem[] = [];
 
-    // Must have a positive keyword
-    const hasPositive = keywords.some((kw) => text.includes(kw));
-    // Must NOT have a negative keyword
-    const hasNegative = negativeKeywords.some((kw) => text.includes(kw));
+  items.forEach((item, idx) => {
+    const title = item.querySelector("title")?.textContent || "";
+    const link = item.querySelector("link")?.textContent || "";
+    const pubDate = item.querySelector("pubDate")?.textContent || "";
+    const sourceEl = item.querySelector("source");
+    const source = sourceEl?.textContent || "Google News";
 
-    return hasPositive && !hasNegative;
+    // Extract image from media:content or description
+    const desc = item.querySelector("description")?.textContent || "";
+    const imgMatch = desc.match(/src="([^"]+)"/);
+    const imageurl = imgMatch?.[1] || "";
+
+    if (title && link) {
+      results.push({
+        id: `gn-${idx}-${Date.now()}`,
+        title: title.replace(/ - .*$/, ""), // Remove " - Source Name" suffix
+        url: link,
+        source,
+        published_on: pubDate ? Math.floor(new Date(pubDate).getTime() / 1000) : 0,
+        imageurl,
+      });
+    }
   });
 
-  // Fall back to items that at least have "Naira" or "Nigeria" if filter is too aggressive
-  const backup = items.filter((item) => {
-    const text = (item.title + " " + item.body).toLowerCase();
-    return text.includes("naira") || text.includes("nigeria");
-  });
-
-  const finalResults = filtered.length >= 2 ? filtered : backup;
-  return finalResults.length >= 1
-    ? finalResults.slice(0, 12)
-    : items.slice(0, 12);
+  return results;
 };
+
+const fetchNairaNews = async (): Promise<NewsItem[]> => {
+  const allItems: NewsItem[] = [];
+
+  // Fetch multiple queries in parallel for broader coverage
+  const fetches = GOOGLE_NEWS_QUERIES.map(async (query) => {
+    try {
+      const rssUrl = `https://news.google.com/rss/search?q=${encodeURIComponent(query)}&hl=en-NG&gl=NG&ceid=NG:en`;
+      const proxyUrl = `https://api.allorigins.win/raw?url=${encodeURIComponent(rssUrl)}`;
+      const res = await fetch(proxyUrl);
+      if (!res.ok) return [];
+      const xml = await res.text();
+      return parseRSSItems(xml);
+    } catch {
+      return [];
+    }
+  });
+
+  const results = await Promise.all(fetches);
+  results.forEach((items) => allItems.push(...items));
+
+  // Deduplicate by title similarity
+  const seen = new Set<string>();
+  const unique = allItems.filter((item) => {
+    const key = item.title.toLowerCase().slice(0, 50);
+    if (seen.has(key)) return false;
+    seen.add(key);
+    return true;
+  });
+
+  // Sort by most recent
+  unique.sort((a, b) => b.published_on - a.published_on);
+
+  return unique.slice(0, 16);
+};
+
+// Fallback placeholder image for items without thumbnails
+const FALLBACK_IMG = "https://images.unsplash.com/photo-1526304640581-d334cdbbf45e?w=400&q=80";
 
 export const NairaNews = () => {
   const { data: news, isLoading } = useQuery({
@@ -112,6 +125,10 @@ export const NairaNews = () => {
             ))}
           </div>
         </div>
+      ) : !news?.length ? (
+        <div className="flex-1 flex items-center justify-center text-muted-foreground/50 text-sm">
+          No Naira news available right now.
+        </div>
       ) : (
         <div className="space-y-4 flex-1">
           {/* Featured */}
@@ -122,15 +139,14 @@ export const NairaNews = () => {
               rel="noopener noreferrer"
               className="block group relative overflow-hidden rounded-xl"
             >
-              <div className="aspect-[21/9] w-full overflow-hidden rounded-xl">
+              <div className="aspect-[21/9] w-full overflow-hidden rounded-xl bg-muted">
                 <img
-                  src={featured.imageurl}
+                  src={featured.imageurl || FALLBACK_IMG}
                   alt={featured.title}
                   className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                   loading="lazy"
                   onError={(e) => {
-                    (e.target as HTMLImageElement).src =
-                      "https://sankore.com/images/FooterBG.webp";
+                    (e.target as HTMLImageElement).src = FALLBACK_IMG;
                   }}
                 />
               </div>
@@ -143,12 +159,14 @@ export const NairaNews = () => {
                   <span className="text-[10px] text-white/70 font-semibold bg-white/10 backdrop-blur-sm px-2 py-0.5 rounded-full">
                     {featured.source}
                   </span>
-                  <span className="text-[10px] text-white/50">
-                    {formatDistanceToNow(
-                      new Date(featured.published_on * 1000),
-                      { addSuffix: true },
-                    )}
-                  </span>
+                  {featured.published_on > 0 && (
+                    <span className="text-[10px] text-white/50">
+                      {formatDistanceToNow(
+                        new Date(featured.published_on * 1000),
+                        { addSuffix: true },
+                      )}
+                    </span>
+                  )}
                 </div>
               </div>
             </a>
@@ -167,13 +185,12 @@ export const NairaNews = () => {
                 >
                   <div className="aspect-[4/3] w-full overflow-hidden">
                     <img
-                      src={item.imageurl}
+                      src={item.imageurl || FALLBACK_IMG}
                       alt={item.title}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                       loading="lazy"
                       onError={(e) => {
-                        (e.target as HTMLImageElement).src =
-                          "https://sankore.com/images/FooterBG.webp";
+                        (e.target as HTMLImageElement).src = FALLBACK_IMG;
                       }}
                     />
                   </div>
@@ -186,13 +203,17 @@ export const NairaNews = () => {
                       <span className="text-[9px] text-white/60 font-medium">
                         {item.source}
                       </span>
-                      <span className="text-[9px] text-white/40">·</span>
-                      <span className="text-[9px] text-white/40">
-                        {formatDistanceToNow(
-                          new Date(item.published_on * 1000),
-                          { addSuffix: true },
-                        )}
-                      </span>
+                      {item.published_on > 0 && (
+                        <>
+                          <span className="text-[9px] text-white/40">·</span>
+                          <span className="text-[9px] text-white/40">
+                            {formatDistanceToNow(
+                              new Date(item.published_on * 1000),
+                              { addSuffix: true },
+                            )}
+                          </span>
+                        </>
+                      )}
                       <ExternalLink className="h-2.5 w-2.5 text-white/30 ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
                     </div>
                   </div>
