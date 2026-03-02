@@ -25,8 +25,8 @@ export const Header = ({
   onDateRangeChange,
 }: HeaderProps) => {
   return (
-    <header className="flex flex-col lg:flex-row md:items-center justify-between mb-8 md:mb-12 gap-6 pt-2">
-      <div className="flex items-center gap-4 sm:gap-5">
+    <header className="flex flex-col md:items-center justify-between mb-8 md:mb-12 gap-6 pt-2">
+      <div className="flex items-center gap-4 sm:gap-5 w-full justify-between">
         <div className="bg-primary/10 p-2 sm:p-2.5 rounded-2xl border border-primary/20 backdrop-blur-md shadow-inner transition-transform hover:scale-105 duration-300 shrink-0">
           <img
             src="https://res.cloudinary.com/dan4b75j7/image/upload/v1744208879/wealthblack/SkT3_azgue5.png"
@@ -63,7 +63,7 @@ export const Header = ({
         </div>
       </div>
 
-      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4">
+      <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 sm:gap-4 w-full justify-between">
         <div className="flex-1 sm:flex-none">
           <DateRangePicker
             dateRange={dateRange}
